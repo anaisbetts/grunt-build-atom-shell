@@ -15,12 +15,12 @@
       "url": "http://github.com/paulcbetts/grunt-build-atom-shell/raw/master/LICENSE.md"
     }
   ],
-  "homepage": "https://github.com/atom/grunt-build-atom-shell",
+  "homepage": "https://github.com/paulcbetts/grunt-build-atom-shell",
   "repository": {
     "type": "git",
-    "url": "https://github.com/atom/grunt-build-atom-shell.git"
+    "url": "https://github.com/paulcbetts/grunt-build-atom-shell.git"
   },
   "bugs": {
-    "url": "https://github.com/atom/grunt-build-atom-shell/issues"
+    "url": "https://github.com/paulcbetts/grunt-build-atom-shell/issues"
   }
 }
