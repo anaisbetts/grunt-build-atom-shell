@@ -31,6 +31,9 @@ module.exports = (grunt) ->
       cmds.unshift { cmd: 'git', args: ['remote', 'set-url', 'origin', remoteUrl], opts: {cwd: atomShellDir} },
     else
       rm atomShellDir
+
+      grunt.verbose.ok "Cloning to #{buildDir}"
+      grunt.file.mkdir buildDir
       cmds.unshift { cmd: 'git', args: ['clone', remoteUrl], opts: {cwd: buildDir} },
 
     bootstrapAtomShell = rx.Observable.fromArray(cmds)
@@ -55,6 +58,7 @@ module.exports = (grunt) ->
       atomGyp = atomGyp
         .replace("'project_name': 'atom'", "'project_name': '#{projectName}'")
         .replace("'product_name': 'Atom'", "'product_name': '#{productName}'")
+        .replace("'framework_name': 'Atom Framework'", "'framework_name': '#{productName} Framework'")
 
       grunt.file.write gypFile, atomGyp
 
