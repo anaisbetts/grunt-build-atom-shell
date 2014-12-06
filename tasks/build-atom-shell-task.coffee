@@ -1,7 +1,7 @@
 fs = require 'fs'
 path = require 'path'
 rx = require 'rx'
-_ = require 'underscore-plus'
+_ = require 'underscore'
 
 module.exports = (grunt) ->
   {cp, mkdir, rm, spawn} = require('./task-helpers')(grunt)
