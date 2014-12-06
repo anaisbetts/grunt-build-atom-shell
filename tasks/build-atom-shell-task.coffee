@@ -108,9 +108,10 @@ module.exports = (grunt) ->
 
     @requiresConfig "#{@name}.buildDir", "#{@name}.tag", "#{@name}.projectName", "#{@name}.productName"
 
-    {buildDir, config, remoteUrl, projectName, productName, tag} = grunt.config @name
+    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag} = grunt.config @name
     config ?= 'Release'
     remoteUrl ?= 'https://github.com/atom/atom-shell'
+    targetDir ?= 'atom-shell'
     atomShellDir = path.join buildDir, 'atom-shell'
 
     buildErrything = rx.Observable.concat(
@@ -124,7 +125,4 @@ module.exports = (grunt) ->
         rm 'atom-shell'
         cp(path.resolve(atomShellDir, 'out', config), 'atom-shell')
         return x
-      .subscribe(
-        (x) ->
-        (ex) -> done(ex)
-        -> done())
+      .subscribe(( ->), done, done)

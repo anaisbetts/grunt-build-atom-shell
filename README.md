@@ -26,6 +26,7 @@ grunt.loadNpmTasks('grunt-build-atom-shell');
 * `tag` - **Required** A tag, branch, or commit of Atom Shell to build
 * `projectName` - **Required** A short name for your project (originally 'atom')
 * `productName` - **Required** The name of the final binary generated (originally 'Atom')
+* `targetDir` - Where to put the resulting atom-shell, defaults to ./atom-shell
 * `config` - Either 'Debug' or 'Release', defaults to 'Release'
 * `remoteUrl` - The Git remote url to download from, defaults to official Atom Shell
 

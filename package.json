@@ -4,6 +4,7 @@
   "version": "0.1.1",
   "main": "grunt.js",
   "dependencies": {
+    "fs-plus": "^2.3.2",
     "grunt": "0.4",
     "rx": "^2.3.20",
     "underscore": "^1.7.0"
