@@ -108,7 +108,7 @@ module.exports = (grunt) ->
 
     @requiresConfig "#{@name}.buildDir", "#{@name}.tag", "#{@name}.projectName", "#{@name}.productName"
 
-    {buildDir, config, remoteUrl, projectName, productName, tag, rebuildPackages} = grunt.config @name
+    {buildDir, config, remoteUrl, projectName, productName, tag} = grunt.config @name
     config ?= 'Release'
     remoteUrl ?= 'https://github.com/atom/atom-shell'
     atomShellDir = path.join buildDir, 'atom-shell'
