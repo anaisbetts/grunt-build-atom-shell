@@ -108,6 +108,19 @@ module.exports = (grunt) ->
       grunt.verbose.ok 'Rebuilding native modules against Atom Shell'
       spawnObservable({cmd, args, opts: {env}}).subscribe(subj)
 
+  grunt.registerTask 'rebuild-native-modules', "Rebuild native modules (debugging)", ->
+    done = @async()
+
+    {buildDir, config}  = grunt.config 'build-atom-shell'
+    config ?= 'Release'
+    atomShellDir = path.join buildDir, 'atom-shell'
+
+    rebuild = rx.Observable.concat(
+      generateNodeLib(atomShellDir, config),
+      rebuildNativeModules()).takeLast(1)
+
+    rebuild.subscribe(done, done)
+
   grunt.registerTask 'build-atom-shell', 'Build Atom Shell from source', ->
     done = @async()
 
