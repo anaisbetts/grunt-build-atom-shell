@@ -40,7 +40,7 @@ module.exports = (grunt) ->
       .concatMap (x) -> spawnObservable(x)
       .takeLast(1)
 
-  buildAtomShell = (atomShellDir, config, projectName, productName) ->
+  buildAtomShell = (atomShellDir, config, projectName, productName, forceRebuild) ->
     bootstrapCmd =
       cmd: 'python'
       args: ['script/bootstrap.py']
@@ -64,7 +64,7 @@ module.exports = (grunt) ->
 
       canary = path.join(atomShellDir, 'vendor', 'brightray', 'vendor', 'libchromiumcontent', 'VERSION')
       bootstrap = spawnObservable(bootstrapCmd)
-      if fs.existsSync(canary)
+      if fs.existsSync(canary) and (not forceRebuild?)
         grunt.verbose.ok("bootstrap appears to have been run, skipping it to save time!")
         bootstrap = rx.Observable.return(true)
 
@@ -72,7 +72,7 @@ module.exports = (grunt) ->
         .takeLast(1)
         .subscribe(subj)
 
-  generateNodeLib = (atomShellDir, config, projectName) ->
+  generateNodeLib = (atomShellDir, config, projectName, forceRebuild) ->
     return rx.Observable.return(true) unless process.platform is 'win32'
 
     homeDir = if process.platform is 'win32' then process.env.USERPROFILE else process.env.HOME
@@ -82,7 +82,7 @@ module.exports = (grunt) ->
     source = path.resolve atomShellDir, 'out', 'Release', 'node.lib'
     target = path.resolve nodeGypHome, '.node-gyp', '0.18.0', 'ia32', 'node.lib'
 
-    if fs.existsSync(source)
+    if fs.existsSync(source) and (not forceRebuild?)
       cp source, target
       return rx.Observable.return(true)
 
@@ -122,8 +122,8 @@ module.exports = (grunt) ->
     atomShellDir = path.join buildDir, 'atom-shell'
 
     rebuild = rx.Observable.concat(
-      generateNodeLib(atomShellDir, config, projectName),
-      rebuildNativeModules(projectName)).takeLast(1)
+      generateNodeLib(atomShellDir, config, projectName, true),
+      rebuildNativeModules(projectName, true)).takeLast(1)
 
     rebuild.subscribe(done, done)
 
@@ -132,7 +132,7 @@ module.exports = (grunt) ->
 
     @requiresConfig "#{@name}.buildDir", "#{@name}.tag", "#{@name}.projectName", "#{@name}.productName"
 
-    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag} = grunt.config @name
+    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild} = grunt.config @name
     config ?= 'Release'
     remoteUrl ?= 'https://github.com/atom/atom-shell'
     targetDir ?= 'atom-shell'
@@ -140,8 +140,8 @@ module.exports = (grunt) ->
 
     buildErrything = rx.Observable.concat(
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
-      buildAtomShell(atomShellDir, config, projectName, productName),
-      generateNodeLib(atomShellDir, config, projectName),
+      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild),
+      generateNodeLib(atomShellDir, config, projectName, forceRebuild),
       rebuildNativeModules(projectName)).takeLast(1)
 
     buildErrything
