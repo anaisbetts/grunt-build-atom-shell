@@ -39,7 +39,7 @@ module.exports = function(grunt) {
   grunt.initConfig({
     'build-atom-shell': {
       tag: 'v0.16.3',
-      buildDir: 'atom-shell',
+      buildDir: (path.env.TMPDIR || path.env.TEMP || '/tmp') + '/atom-shell',
       projectName: 'mycoolapp',
       productName: 'MyCoolApp'
     }
