@@ -23,8 +23,8 @@ module.exports = (grunt) ->
   bootstrapAtomShell = (buildDir, atomShellDir, remoteUrl, tag) ->
     cmds = [
       { cmd: 'git', args: ['fetch', 'origin'], opts: {cwd: atomShellDir} },
-      { cmd: 'git', args: ['checkout', tag, ], opts: {cwd: atomShellDir} },
       { cmd: 'git', args: ['reset', '--hard', 'HEAD'], opts: {cwd: atomShellDir} },
+      { cmd: 'git', args: ['checkout', tag, ], opts: {cwd: atomShellDir} },
     ]
 
     if fs.existsSync(atomShellDir)
