@@ -63,8 +63,10 @@ module.exports = (grunt) ->
       grunt.file.write gypFile, atomGyp
 
       canary = path.join(atomShellDir, 'vendor', 'brightray', 'vendor', 'libchromiumcontent', 'VERSION')
+      outDir = path.join(atomShellDir, 'out', 'Release')
+
       bootstrap = spawnObservable(bootstrapCmd)
-      if fs.existsSync(canary) and (not forceRebuild?)
+      if fs.existsSync(canary) and fs.existsSync(outDir) and (not forceRebuild?)
         grunt.verbose.ok("bootstrap appears to have been run, skipping it to save time!")
         bootstrap = rx.Observable.return(true)
 
