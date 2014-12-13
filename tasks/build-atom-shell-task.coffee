@@ -148,7 +148,7 @@ module.exports = (grunt) ->
 
     buildErrything
       .map (x) ->
-        rm 'atom-shell'
-        cp(path.resolve(atomShellDir, 'out', config), 'atom-shell')
+        rm targetDir
+        cp(path.resolve(atomShellDir, 'out', config), targetDir)
         return x
       .subscribe(( ->), done, done)
