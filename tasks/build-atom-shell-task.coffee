@@ -137,7 +137,7 @@ module.exports = (grunt) ->
     remoteUrl ?= 'https://github.com/atom/atom-shell'
     targetDir ?= 'atom-shell'
     atomShellDir = path.join buildDir, 'atom-shell'
-    nodeVersion ?= process.env.ATOM_NODE_VERSION ? '0.18.0'
+    nodeVersion ?= process.env.ATOM_NODE_VERSION ? '0.20.0'
 
     buildErrything = rx.Observable.concat(
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
