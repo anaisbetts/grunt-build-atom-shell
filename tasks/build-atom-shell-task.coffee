@@ -74,7 +74,7 @@ module.exports = (grunt) ->
         .takeLast(1)
         .subscribe(subj)
 
-  generateNodeLib = (atomShellDir, config, projectName, forceRebuild) ->
+  generateNodeLib = (atomShellDir, config, projectName, forceRebuild, nodeVersion) ->
     return rx.Observable.return(true) unless process.platform is 'win32'
 
     homeDir = if process.platform is 'win32' then process.env.USERPROFILE else process.env.HOME
@@ -82,7 +82,7 @@ module.exports = (grunt) ->
     nodeGypHome =  path.join(atomHome, '.node-gyp')
 
     source = path.resolve atomShellDir, 'out', 'Release', 'node.lib'
-    target = path.resolve nodeGypHome, '.node-gyp', '0.18.0', 'ia32', 'node.lib'
+    target = path.resolve nodeGypHome, '.node-gyp', nodeVersion, 'ia32', 'node.lib'
 
     if fs.existsSync(source) and (not forceRebuild?)
       cp source, target
@@ -95,13 +95,11 @@ module.exports = (grunt) ->
 
     spawnObservable(buildNodeLib).do(-> cp source, target)
 
-  rebuildNativeModules = (projectName) ->
+  rebuildNativeModules = (projectName, nodeVersion) ->
     nodeArch = switch process.platform
       when 'darwin' then 'x64'
       when 'win32' then 'ia32'
       else process.arch
-
-    nodeVersion = process.env.ATOM_NODE_VERSION ? '0.18.0'
 
     homeDir = if process.platform is 'win32' then process.env.USERPROFILE else process.env.HOME
     atomHome = process.env.ATOM_HOME ? path.join(homeDir, ".#{projectName}")
@@ -134,17 +132,18 @@ module.exports = (grunt) ->
 
     @requiresConfig "#{@name}.buildDir", "#{@name}.tag", "#{@name}.projectName", "#{@name}.productName"
 
-    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild} = grunt.config @name
+    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild, nodeVersion} = grunt.config @name
     config ?= 'Release'
     remoteUrl ?= 'https://github.com/atom/atom-shell'
     targetDir ?= 'atom-shell'
     atomShellDir = path.join buildDir, 'atom-shell'
+    nodeVersion ?= process.env.ATOM_NODE_VERSION ? '0.18.0'
 
     buildErrything = rx.Observable.concat(
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
       buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild),
-      generateNodeLib(atomShellDir, config, projectName, forceRebuild),
-      rebuildNativeModules(projectName)).takeLast(1)
+      generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion),
+      rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
 
     buildErrything
       .map (x) ->
