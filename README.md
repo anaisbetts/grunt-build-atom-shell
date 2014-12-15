@@ -29,6 +29,7 @@ grunt.loadNpmTasks('grunt-build-atom-shell');
 * `targetDir` - Where to put the resulting atom-shell, defaults to ./atom-shell
 * `config` - Either 'Debug' or 'Release', defaults to 'Release'
 * `remoteUrl` - The Git remote url to download from, defaults to official Atom Shell
+* `nodeVersion` - The version of Node.js to use; see the section below for how to configure this
 
 ### Example
 
@@ -38,7 +39,8 @@ grunt.loadNpmTasks('grunt-build-atom-shell');
 module.exports = function(grunt) {
   grunt.initConfig({
     'build-atom-shell': {
-      tag: 'v0.16.3',
+      tag: 'v0.19.5',
+      nodeVersion: '0.18.0',
       buildDir: (path.env.TMPDIR || path.env.TEMP || '/tmp') + '/atom-shell',
       projectName: 'mycoolapp',
       productName: 'MyCoolApp'
@@ -46,3 +48,10 @@ module.exports = function(grunt) {
   });
 };
 ```
+
+### Correctly setting nodeVersion
+
+Different versions of Atom Shell expect to be linked against different versions of node.js. Since `grunt-build-atom-shell` allows you to use arbitrary commits of Atom Shell, there is no way for it to know which version is correct to use, so it must be explicitly provided. If you don't explicitly provide a version, we will guess the latest version, which may or may not be correct.
+
+* 0.19.x series - `0.18.0`
+* 0.20.x series - `0.20.0`
