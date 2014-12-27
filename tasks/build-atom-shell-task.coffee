@@ -24,8 +24,6 @@ module.exports = (grunt) ->
     ret.opts.env.PATH = '/usr/bin:' + process.env.PATH
 
     ret.cmd = '/usr/bin/python' if ret.cmd is 'python'
-
-    grunt.verbose.ok JSON.stringify(ret)
     ret
 
   spawnObservable = (options={}) ->
