@@ -55,3 +55,5 @@ Different versions of Atom Shell expect to be linked against different versions 
 
 * 0.19.x series - `0.18.0`
 * 0.20.x series - `0.20.0`
+
+These numbers **don't match the official node.js versions**, because they also reflect patches that Atom puts into node.js to make it compatible with Chromium. 
