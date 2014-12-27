@@ -151,6 +151,15 @@ module.exports = (grunt) ->
 
     rebuild.subscribe(done, done)
 
+  grunt.registerTask 'rebuild-atom-shell', 'Clean build Atom Shell', ->
+    @requiresConfig "build-atom-shell.buildDir"
+
+    {buildDir} = grunt.config 'build-atom-shell'
+    atomShellDir = path.join buildDir, 'atom-shell'
+    rm atomShellDir
+
+    grunt.task.run 'build-atom-shell'
+
   grunt.registerTask 'build-atom-shell', 'Build Atom Shell from source', ->
     done = @async()
 
