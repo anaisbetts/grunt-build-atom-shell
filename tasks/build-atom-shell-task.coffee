@@ -119,6 +119,30 @@ module.exports = (grunt) ->
 
     spawnObservable(buildNodeLib).do(-> cp source, target)
 
+  installNode = (projectName, nodeVersion) ->
+    nodeArch = switch process.platform
+      when 'darwin' then 'x64'
+      when 'win32' then 'ia32'
+      else process.arch
+
+    homeDir = if process.platform is 'win32' then process.env.USERPROFILE else process.env.HOME
+    atomHome = process.env.ATOM_HOME ? path.join(homeDir, ".#{projectName}")
+    nodeGypHome =  path.join(atomHome, '.node-gyp')
+    distUrl = process.env.ATOM_NODE_URL ? 'https://gh-contractor-zcbenz.s3.amazonaws.com/atom-shell/dist'
+
+    cmd = 'node'
+    args = [require.resolve('npm/node_modules/node-gyp/bin/node-gyp'), 'install',
+      "--target=#{nodeVersion}",
+      "--arch=#{nodeArch}",
+      "--dist-url=#{distUrl}"]
+
+    env = _.extend {}, process.env, HOME: nodeGypHome
+    env.USERPROFILE = env.HOME if process.platform is 'win32'
+
+    rx.Observable.create (subj) ->
+      grunt.verbose.ok 'Rebuilding native modules against Atom Shell'
+      spawnObservable({cmd, args, opts: {env}}).subscribe(subj)
+
   rebuildNativeModules = (projectName, nodeVersion) ->
     nodeArch = switch process.platform
       when 'darwin' then 'x64'
@@ -141,13 +165,14 @@ module.exports = (grunt) ->
   grunt.registerTask 'rebuild-native-modules', "Rebuild native modules (debugging)", ->
     done = @async()
 
-    {buildDir, config, projectName}  = grunt.config 'build-atom-shell'
+    {buildDir, config, projectName, nodeVersion}  = grunt.config 'build-atom-shell'
     config ?= 'Release'
     atomShellDir = path.join buildDir, 'atom-shell'
 
     rebuild = rx.Observable.concat(
       generateNodeLib(atomShellDir, config, projectName, true),
-      rebuildNativeModules(projectName, true)).takeLast(1)
+      installNode(projectName, nodeVersion)
+      rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
 
     rebuild.subscribe(done, done)
 
@@ -176,6 +201,7 @@ module.exports = (grunt) ->
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
       buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild),
       generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion),
+      installNode(projectName, nodeVersion),
       rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
 
     buildErrything
