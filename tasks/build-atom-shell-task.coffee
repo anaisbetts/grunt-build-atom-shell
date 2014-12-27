@@ -19,9 +19,9 @@ module.exports = (grunt) ->
     newEnv = _.extend {}, process.env
 
     ret = _.extend {}, options
-    ret.options ?= {}
-    ret.options.env ?= newEnv
-    ret.options.env.PATH = '/usr/bin:' + process.env.PATH
+    ret.opts ?= {}
+    ret.opts.env ?= newEnv
+    ret.opts.env.PATH = '/usr/bin:' + process.env.PATH
 
     ret.cmd = '/usr/bin/python' if ret.cmd is 'python'
 
