@@ -6,11 +6,35 @@ _ = require 'underscore'
 module.exports = (grunt) ->
   {cp, mkdir, rm, spawn} = require('./task-helpers')(grunt)
 
+  fixBorkedOSXPythonPath = (options) ->
+    return options unless process.platform is 'darwin'
+    paths = process.env.PATH.split(':')
+
+    # NB: Atom Shell's build process requires PyObjC, which is part of system Python,
+    # but not part of the Python installed by Homebrew. If the default Python is
+    # the Homebrew one, we need to rig PATH to point to the good one
+    pyPath = _.find paths, (x) -> fs.existsSync(path.join(x, 'python'))
+    return options if pyPath is '/usr/bin'
+
+    newEnv = _.extend {}, process.env
+
+    ret = _.extend {}, options
+    ret.options ?= {}
+    ret.options.env ?= newEnv
+    ret.options.env.PATH = '/usr/bin:' + process.env.PATH
+
+    ret.cmd = '/usr/bin/python' if ret.cmd is 'python'
+
+    grunt.verbose.ok JSON.stringify(ret)
+    ret
+
   spawnObservable = (options={}) ->
+    fixedOpts = fixBorkedOSXPythonPath(options)
+
     rx.Observable.create (subj) ->
       grunt.verbose.ok "Running: #{options.cmd} #{options.args.join ' '}"
 
-      spawn options, (error, result, code) ->
+      spawn fixedOpts, (error, result, code) ->
         if error
           subj.onError error
           return
