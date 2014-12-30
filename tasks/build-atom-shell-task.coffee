@@ -168,8 +168,8 @@ module.exports = (grunt) ->
     atomShellDir = path.join buildDir, 'atom-shell'
 
     rebuild = rx.Observable.concat(
+      installNode(projectName, nodeVersion),
       generateNodeLib(atomShellDir, config, projectName, true),
-      installNode(projectName, nodeVersion)
       rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
 
     rebuild.subscribe(done, done)
@@ -198,8 +198,8 @@ module.exports = (grunt) ->
     buildErrything = rx.Observable.concat(
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
       buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild),
-      generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion),
       installNode(projectName, nodeVersion),
+      generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion),
       rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
 
     buildErrything
