@@ -103,19 +103,22 @@ module.exports = (grunt) ->
     atomHome = process.env.ATOM_HOME ? path.join(homeDir, ".#{projectName}")
     nodeGypHome =  path.join(atomHome, '.node-gyp')
 
-    source = path.resolve atomShellDir, 'out', 'Release', 'node.lib'
-    target = path.resolve nodeGypHome, '.node-gyp', nodeVersion, 'ia32', 'node.lib'
+    rx.Observable.create (subj) ->
+      source = path.resolve atomShellDir, 'out', 'Release', 'node.lib'
+      target = path.resolve nodeGypHome, '.node-gyp', nodeVersion, 'ia32', 'node.lib'
 
-    if fs.existsSync(source) and (not forceRebuild?)
-      cp source, target
-      return rx.Observable.return(true)
+      grunt.verbose.ok 'Generating new node.lib'
+      if fs.existsSync(source) and (not forceRebuild?)
+        grunt.verbose.ok 'Found existing node.lib, reusing it'
+        cp source, target
+        return rx.Observable.return(true).subscribe(subj)
 
-    buildNodeLib =
-      cmd: 'python'
-      args: ['script/build.py', '-c', config, '-t', 'generate_node_lib']
-      opts: { cwd: atomShellDir }
+      buildNodeLib =
+        cmd: 'python'
+        args: ['script/build.py', '-c', config, '-t', 'generate_node_lib']
+        opts: { cwd: atomShellDir }
 
-    spawnObservable(buildNodeLib).do(-> cp source, target)
+      spawnObservable(buildNodeLib).do(-> cp source, target).subscribe(subj)
 
   installNode = (projectName, nodeVersion) ->
     nodeArch = switch process.platform
@@ -128,6 +131,11 @@ module.exports = (grunt) ->
     nodeGypHome =  path.join(atomHome, '.node-gyp')
     distUrl = process.env.ATOM_NODE_URL ? 'https://gh-contractor-zcbenz.s3.amazonaws.com/atom-shell/dist'
 
+    if (fs.existsSync(canary))
+      return rx.Observable.create (subj) ->
+        grunt.verbose.ok 'Found existing node.js installation, skipping install to save time!'
+        rx.Observable.return(true).subscribe(subj)
+
     cmd = 'node'
     args = [require.resolve('npm/node_modules/node-gyp/bin/node-gyp'), 'install',
       "--target=#{nodeVersion}",
@@ -138,7 +146,7 @@ module.exports = (grunt) ->
     env.USERPROFILE = env.HOME if process.platform is 'win32'
 
     rx.Observable.create (subj) ->
-      grunt.verbose.ok 'Rebuilding native modules against Atom Shell'
+      grunt.verbose.ok 'Installing node.js'
       spawnObservable({cmd, args, opts: {env}}).subscribe(subj)
 
   rebuildNativeModules = (projectName, nodeVersion) ->
