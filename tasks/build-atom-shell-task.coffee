@@ -131,6 +131,7 @@ module.exports = (grunt) ->
     nodeGypHome =  path.join(atomHome, '.node-gyp')
     distUrl = process.env.ATOM_NODE_URL ? 'https://gh-contractor-zcbenz.s3.amazonaws.com/atom-shell/dist'
 
+    canary = path.join(nodeGypHome, '.node-gyp', nodeVersion, 'common.gypi')
     if (fs.existsSync(canary))
       return rx.Observable.create (subj) ->
         grunt.verbose.ok 'Found existing node.js installation, skipping install to save time!'
