@@ -1,7 +1,7 @@
 {
   "name": "grunt-build-atom-shell",
   "description": "Grunt task to build atom-shell and rebuild node modules",
-  "version": "1.1.2",
+  "version": "1.1.4",
   "main": "grunt.js",
   "dependencies": {
     "fs-plus": "^2.3.2",
