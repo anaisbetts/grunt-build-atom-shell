@@ -204,9 +204,13 @@ module.exports = (grunt) ->
     atomShellDir = path.join buildDir, 'atom-shell'
     nodeVersion ?= process.env.ATOM_NODE_VERSION ? '0.20.0'
 
+    buildAndTryBootstrappingIfItDoesntWork =
+      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild)
+        .catch(buildAtomShell(atomShellDir, config, projectName, productName, true))
+
     buildErrything = rx.Observable.concat(
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
-      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild),
+      buildAndTryBootstrappingIfItDoesntWork,
       installNode(projectName, nodeVersion),
       generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion),
       rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
