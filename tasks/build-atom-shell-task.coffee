@@ -62,16 +62,27 @@ module.exports = (grunt) ->
       .concatMap (x) -> spawnObservable(x)
       .takeLast(1)
 
+  envWithGypDefines = (projectName, productName) ->
+    ewg = _.extend {}, process.env
+    ewg.GYP_DEFINES = "project_name=#{projectName} product_name=#{productName}"
+    if process.env.GYP_DEFINES?
+      ewg.GYP_DEFINES = "#{process.env.GYP_DEFINES} #{ewg.GYP_DEFINES}"
+    ewg
+
   buildAtomShell = (atomShellDir, config, projectName, productName, forceRebuild) ->
+    cmdOptions =
+      cwd: atomShellDir
+      env: envWithGypDefines(projectName, productName)
+
     bootstrapCmd =
       cmd: 'python'
       args: ['script/bootstrap.py']
-      opts: {cwd: atomShellDir}
+      opts: cmdOptions
 
     buildCmd =
       cmd: 'python'
       args: ['script/build.py', '-c', config, '-t', projectName]
-      opts: {cwd: atomShellDir}
+      opts: cmdOptions
 
     rx.Observable.create (subj) ->
       grunt.verbose.ok "Rigging atom.gyp to have correct name"
@@ -81,6 +92,7 @@ module.exports = (grunt) ->
         .replace("'project_name': 'atom'", "'project_name': '#{projectName}'")
         .replace("'product_name': 'Atom'", "'product_name': '#{productName}'")
         .replace("'framework_name': 'Atom Framework'", "'framework_name': '#{productName} Framework'")
+        .replace("'<(project_name) Framework'", "'<(product_name) Framework'") # fix upstream typo in 0.20.3
 
       grunt.file.write gypFile, atomGyp
 
