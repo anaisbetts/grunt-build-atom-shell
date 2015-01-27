@@ -64,7 +64,7 @@ module.exports = (grunt) ->
 
   envWithGypDefines = (projectName, productName) ->
     ewg = _.extend {}, process.env
-    ewg.GYP_DEFINES = "project_name=#{projectName} product_name=#{productName}"
+    ewg.GYP_DEFINES = "project_name=#{projectName} product_name=#{productName.replace(' ','\\ ')}"
     if process.env.GYP_DEFINES?
       ewg.GYP_DEFINES = "#{process.env.GYP_DEFINES} #{ewg.GYP_DEFINES}"
     ewg
