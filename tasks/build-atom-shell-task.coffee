@@ -42,11 +42,11 @@ module.exports = (grunt) ->
 
       rx.Disposable.empty
 
-  bootstrapAtomShell = (buildDir, atomShellDir, remoteUrl, tag) ->
+  bootstrapAtomShell = (buildDir, atomShellDir, remoteUrl, tag, stdout, stderr) ->
     cmds = [
-      { cmd: 'git', args: ['fetch', 'origin'], opts: {cwd: atomShellDir} },
-      { cmd: 'git', args: ['reset', '--hard', 'HEAD'], opts: {cwd: atomShellDir} },
-      { cmd: 'git', args: ['checkout', tag, ], opts: {cwd: atomShellDir} },
+      { cmd: 'git', args: ['fetch', 'origin'], opts: {cwd: atomShellDir}, stdout: stdout, stderr: stderr },
+      { cmd: 'git', args: ['reset', '--hard', 'HEAD'], opts: {cwd: atomShellDir}, stdout: stdout, stderr: stderr },
+      { cmd: 'git', args: ['checkout', tag, ], opts: {cwd: atomShellDir}, stdout: stdout, stderr: stderr },
     ]
 
     if fs.existsSync(atomShellDir)
@@ -69,20 +69,24 @@ module.exports = (grunt) ->
       ewg.GYP_DEFINES = "#{process.env.GYP_DEFINES} #{ewg.GYP_DEFINES}"
     ewg
 
-  buildAtomShell = (atomShellDir, config, projectName, productName, forceRebuild) ->
+  buildAtomShell = (atomShellDir, config, projectName, productName, forceRebuild, stdout, stderr) ->
     cmdOptions =
       cwd: atomShellDir
       env: envWithGypDefines(projectName, productName)
 
     bootstrapCmd =
       cmd: 'python'
-      args: ['script/bootstrap.py']
+      args: ['script/bootstrap.py', '-v']
       opts: cmdOptions
+      stdout: stdout
+      stderr: stderr
 
     buildCmd =
       cmd: 'python'
       args: ['script/build.py', '-c', config, '-t', projectName]
       opts: cmdOptions
+      stdout: stdout
+      stderr: stderr
 
     rx.Observable.create (subj) ->
       grunt.verbose.ok "Rigging atom.gyp to have correct name"
@@ -108,7 +112,7 @@ module.exports = (grunt) ->
         .takeLast(1)
         .subscribe(subj)
 
-  generateNodeLib = (atomShellDir, config, projectName, forceRebuild, nodeVersion) ->
+  generateNodeLib = (atomShellDir, config, projectName, forceRebuild, nodeVersion, stdout, stderr) ->
     return rx.Observable.return(true) unless process.platform is 'win32'
 
     homeDir = if process.platform is 'win32' then process.env.USERPROFILE else process.env.HOME
@@ -129,10 +133,12 @@ module.exports = (grunt) ->
         cmd: 'python'
         args: ['script/build.py', '-c', config, '-t', 'generate_node_lib']
         opts: { cwd: atomShellDir }
+        stdout: stdout
+        stderr: stderr
 
       spawnObservable(buildNodeLib).do(-> cp source, target).subscribe(subj)
 
-  installNode = (projectName, nodeVersion) ->
+  installNode = (projectName, nodeVersion, stdout, stderr) ->
     nodeArch = switch process.platform
       when 'darwin' then 'x64'
       when 'win32' then 'ia32'
@@ -160,9 +166,9 @@ module.exports = (grunt) ->
 
     rx.Observable.create (subj) ->
       grunt.verbose.ok 'Installing node.js'
-      spawnObservable({cmd, args, opts: {env}}).subscribe(subj)
+      spawnObservable({cmd, args, opts: {env}, stdout: stdout, stderr: stderr}).subscribe(subj)
 
-  rebuildNativeModules = (projectName, nodeVersion) ->
+  rebuildNativeModules = (projectName, nodeVersion, stdout, stderr) ->
     nodeArch = switch process.platform
       when 'darwin' then 'x64'
       when 'win32' then 'ia32'
@@ -179,19 +185,19 @@ module.exports = (grunt) ->
 
     rx.Observable.create (subj) ->
       grunt.verbose.ok 'Rebuilding native modules against Atom Shell'
-      spawnObservable({cmd, args, opts: {env}}).subscribe(subj)
+      spawnObservable({cmd, args, opts: {env}, stdout: stdout, stderr: stderr}).subscribe(subj)
 
   grunt.registerTask 'rebuild-native-modules', "Rebuild native modules (debugging)", ->
     done = @async()
 
-    {buildDir, config, projectName, nodeVersion}  = grunt.config 'build-atom-shell'
+    {buildDir, config, projectName, nodeVersion, stdout, stderr}  = grunt.config 'build-atom-shell'
     config ?= 'Release'
     atomShellDir = path.join buildDir, 'atom-shell'
 
     rebuild = rx.Observable.concat(
-      installNode(projectName, nodeVersion),
-      generateNodeLib(atomShellDir, config, projectName, true),
-      rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
+      installNode(projectName, nodeVersion, stdout, stderr),
+      generateNodeLib(atomShellDir, config, projectName, true, stdout, stderr),
+      rebuildNativeModules(projectName, nodeVersion, stdout, stderr)).takeLast(1)
 
     rebuild.subscribe(done, done)
 
@@ -209,7 +215,7 @@ module.exports = (grunt) ->
 
     @requiresConfig "#{@name}.buildDir", "#{@name}.tag", "#{@name}.projectName", "#{@name}.productName"
 
-    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild, nodeVersion} = grunt.config @name
+    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild, nodeVersion, stdout, stderr} = grunt.config @name
     config ?= 'Release'
     remoteUrl ?= 'https://github.com/atom/atom-shell'
     targetDir ?= 'atom-shell'
@@ -217,15 +223,15 @@ module.exports = (grunt) ->
     nodeVersion ?= process.env.ATOM_NODE_VERSION ? '0.20.0'
 
     buildAndTryBootstrappingIfItDoesntWork =
-      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild)
-        .catch(buildAtomShell(atomShellDir, config, projectName, productName, true))
+      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild, stdout, stderr)
+        .catch(buildAtomShell(atomShellDir, config, projectName, productName, true, stdout, stderr))
 
     buildErrything = rx.Observable.concat(
-      bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag),
+      bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag, stdout, stderr),
       buildAndTryBootstrappingIfItDoesntWork,
-      installNode(projectName, nodeVersion),
-      generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion),
-      rebuildNativeModules(projectName, nodeVersion)).takeLast(1)
+      installNode(projectName, nodeVersion, stdout, stderr),
+      generateNodeLib(atomShellDir, config, projectName, forceRebuild, nodeVersion, stdout, stderr),
+      rebuildNativeModules(projectName, nodeVersion, stdout, stderr)).takeLast(1)
 
     buildErrything
       .map (x) ->
