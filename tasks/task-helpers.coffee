@@ -15,7 +15,7 @@ module.exports = (grunt) ->
         grunt.file.mkdir(path.dirname(destinationPath))
         fs.symlinkSync(fs.readlinkSync(sourcePath), destinationPath)
       else if stats.isFile()
-        grunt.file.copy(sourcePath, destinationPath) if stats.size < 1 * 1024 * 1048576
+        grunt.file.copy(sourcePath, destinationPath) if stats.size < 96 * 1048576
 
       if grunt.file.exists(destinationPath)
         fs.chmodSync(destinationPath, fs.statSync(sourcePath).mode)
