@@ -53,12 +53,12 @@ module.exports = (grunt) ->
     error = null
     proc = childProcess.spawn(options.cmd, options.args, options.opts)
     proc.stdout.on 'data', (data) ->
-      if stdout is []
+      if _.isArray(stdout)
         stdout.push(data.toString())
       else
         stdout.write(data.toString())
     proc.stderr.on 'data', (data) ->
-      if stderr is []
+      if _.isArray(stderr)
         stderr.push(data.toString())
       else
         stderr.write(data.toString())
