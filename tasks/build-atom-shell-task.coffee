@@ -56,7 +56,7 @@ module.exports = (grunt) ->
 
       grunt.verbose.ok "Cloning to #{buildDir}"
       grunt.file.mkdir buildDir
-      cmds.unshift { cmd: 'git', args: ['clone', remoteUrl], opts: {cwd: buildDir} },
+      cmds.unshift { cmd: 'git', args: ['clone', remoteUrl, 'atom-shell'], opts: {cwd: buildDir} },
 
     bootstrapAtomShell = rx.Observable.fromArray(cmds)
       .concatMap (x) -> spawnObservable(x)
