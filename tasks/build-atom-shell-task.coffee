@@ -101,7 +101,7 @@ module.exports = (grunt) ->
       grunt.file.write gypFile, atomGyp
 
       canary = path.join(atomShellDir, 'vendor', 'brightray', 'vendor', 'libchromiumcontent', 'VERSION')
-      outDir = path.join(atomShellDir, 'out', 'Release')
+      outDir = path.join(atomShellDir, 'out', 'R')
 
       bootstrap = spawnObservable(bootstrapCmd)
       if fs.existsSync(canary) and fs.existsSync(outDir) and (not forceRebuild?)
@@ -120,10 +120,10 @@ module.exports = (grunt) ->
     nodeGypHome =  path.join(atomHome, '.node-gyp')
 
     rx.Observable.create (subj) ->
-      source = path.resolve atomShellDir, 'out', 'Release', 'node.lib'
+      source = path.resolve atomShellDir, 'out', 'R', 'node.dll.lib'
       target = path.resolve nodeGypHome, '.node-gyp', nodeVersion, 'ia32', 'node.lib'
 
-      grunt.verbose.ok 'Generating new node.lib'
+      grunt.verbose.ok 'Copying new node.lib'
       if fs.existsSync(source) and (not forceRebuild?)
         grunt.verbose.ok 'Found existing node.lib, reusing it'
         cp source, target
@@ -136,7 +136,7 @@ module.exports = (grunt) ->
         stdout: stdout
         stderr: stderr
 
-      spawnObservable(buildNodeLib).do(-> cp source, target).subscribe(subj)
+      rx.Observable.return(true).do(-> cp source, target).subscribe(subj)
 
   installNode = (projectName, nodeVersion, stdout, stderr) ->
     nodeArch = switch process.platform
@@ -236,6 +236,6 @@ module.exports = (grunt) ->
     buildErrything
       .map (x) ->
         rm targetDir
-        cp(path.resolve(atomShellDir, 'out', config), targetDir)
+        cp(path.resolve(atomShellDir, 'out', config.slice(0,1)), targetDir)
         return x
       .subscribe(( ->), done, done)
