@@ -69,7 +69,7 @@ module.exports = (grunt) ->
       ewg.GYP_DEFINES = "#{process.env.GYP_DEFINES} #{ewg.GYP_DEFINES}"
     ewg
 
-  buildAtomShell = (atomShellDir, config, projectName, productName, forceRebuild, stdout, stderr) ->
+  buildAtomShell = (atomShellDir, config, projectName, productName, forceRebuild, stdout, stderr, arch) ->
     cmdOptions =
       cwd: atomShellDir
       env: envWithGypDefines(projectName, productName)
@@ -87,6 +87,10 @@ module.exports = (grunt) ->
       opts: cmdOptions
       stdout: stdout
       stderr: stderr
+
+    if arch
+      bootstrapCmd.args.push '--target_arch'
+      bootstrapCmd.args.push arch
 
     rx.Observable.create (subj) ->
       grunt.verbose.ok "Rigging atom.gyp to have correct name"
@@ -215,7 +219,7 @@ module.exports = (grunt) ->
 
     @requiresConfig "#{@name}.buildDir", "#{@name}.tag", "#{@name}.projectName", "#{@name}.productName"
 
-    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild, nodeVersion, stdout, stderr} = grunt.config @name
+    {buildDir, targetDir, config, remoteUrl, projectName, productName, tag, forceRebuild, nodeVersion, arch, stdout, stderr} = grunt.config @name
     config ?= 'Release'
     remoteUrl ?= 'https://github.com/atom/atom-shell'
     targetDir ?= 'atom-shell'
@@ -223,8 +227,8 @@ module.exports = (grunt) ->
     nodeVersion ?= process.env.ATOM_NODE_VERSION ? '0.20.0'
 
     buildAndTryBootstrappingIfItDoesntWork =
-      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild, stdout, stderr)
-        .catch(buildAtomShell(atomShellDir, config, projectName, productName, true, stdout, stderr))
+      buildAtomShell(atomShellDir, config, projectName, productName, forceRebuild, stdout, stderr, arch)
+        .catch(buildAtomShell(atomShellDir, config, projectName, productName, true, stdout, stderr, arch))
 
     buildErrything = rx.Observable.concat(
       bootstrapAtomShell(buildDir, atomShellDir, remoteUrl, tag, stdout, stderr),
