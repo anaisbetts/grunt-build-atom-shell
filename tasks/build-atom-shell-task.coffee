@@ -200,7 +200,7 @@ module.exports = (grunt) ->
 
     rebuild = rx.Observable.concat(
       installNode(projectName, nodeVersion, stdout, stderr),
-      generateNodeLib(atomShellDir, config, projectName, true, stdout, stderr),
+      generateNodeLib(atomShellDir, config, projectName, true, nodeVersion, stdout, stderr),
       rebuildNativeModules(projectName, nodeVersion, stdout, stderr)).takeLast(1)
 
     rebuild.subscribe(done, done)
