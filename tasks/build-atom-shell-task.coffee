@@ -88,6 +88,15 @@ module.exports = (grunt) ->
       stdout: stdout
       stderr: stderr
 
+    toStrip = [projectName, 'libnode.so']
+
+    stripCmd =
+      cmd: 'strip'
+      args: _.map(toStrip, (x) -> path.join(atomShellDir, 'out', 'R', x))
+      opts: cmdOptions
+      stdout: stdout
+      stderr: stderr
+
     if arch
       bootstrapCmd.args.push '--target_arch'
       bootstrapCmd.args.push arch
@@ -112,7 +121,9 @@ module.exports = (grunt) ->
         grunt.verbose.ok("bootstrap appears to have been run, skipping it to save time!")
         bootstrap = rx.Observable.return(true)
 
-      rx.Observable.concat(bootstrap, spawnObservable(buildCmd))
+      strip = if process.platform is 'linux' then spawnObservable(stripCmd) else rx.Observable.empty()
+
+      rx.Observable.concat(bootstrap, spawnObservable(buildCmd), strip)
         .takeLast(1)
         .subscribe(subj)
 
