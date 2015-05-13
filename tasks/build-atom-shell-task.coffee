@@ -2,6 +2,7 @@ fs = require 'fs'
 path = require 'path'
 rx = require 'rx'
 _ = require 'underscore'
+glob = require 'glob'
 
 module.exports = (grunt) ->
   {cp, mkdir, rm, spawn} = require('./task-helpers')(grunt)
@@ -41,6 +42,30 @@ module.exports = (grunt) ->
         subj.onCompleted()
 
       rx.Disposable.empty
+      
+  stripAllBinaries = (dirToStrip) ->
+    return rx.Observable.return(true) if process.platform is 'win32'
+    
+    binaryFiles = /\.(so|dylib|node)$/i
+
+    return rx.Observable.create((subj) ->
+      grunt.verbose.ok "Stripping all binaries"
+      
+      binaries = _.filter(glob.sync(path.join(dirToStrip, '**')), (x) ->
+        return true if x.match(binaryFiles)
+        stat = fs.statSync(x)
+        
+        # Check if executable bit is set
+        return stat and stat.isFile() and (stat.mode & 0o111) > 0
+      )
+
+      unless binaries and binaries.length > 0
+        grunt.verbose.ok "Nothing to strip!"
+        return rx.Observable.return(true).subscribe(subj)
+      
+      grunt.verbose.ok "Stripping binaries: #{binaries.join(',')}"
+      return spawnObservable({cmd: 'strip', args: binaries, opts: {cwd: dirToStrip }}).subscribe(subj)
+    )
 
   bootstrapAtomShell = (buildDir, atomShellDir, remoteUrl, tag, stdout, stderr) ->
     cmds = [
@@ -112,7 +137,7 @@ module.exports = (grunt) ->
         grunt.verbose.ok("bootstrap appears to have been run, skipping it to save time!")
         bootstrap = rx.Observable.return(true)
 
-      rx.Observable.concat(bootstrap, spawnObservable(buildCmd))
+      rx.Observable.concat(bootstrap, spawnObservable(buildCmd), stripAllBinaries(outDir))
         .takeLast(1)
         .subscribe(subj)
 
@@ -189,7 +214,10 @@ module.exports = (grunt) ->
 
     rx.Observable.create (subj) ->
       grunt.verbose.ok 'Rebuilding native modules against Atom Shell'
-      spawnObservable({cmd, args, opts: {env}, stdout: stdout, stderr: stderr}).subscribe(subj)
+      
+      spawnObservable({cmd, args, opts: {env}, stdout: stdout, stderr: stderr})
+        .concat(stripAllBinaries('../node_modules'))
+        .subscribe(subj)
 
   grunt.registerTask 'rebuild-native-modules', "Rebuild native modules (debugging)", ->
     done = @async()
