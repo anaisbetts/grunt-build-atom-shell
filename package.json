@@ -4,10 +4,11 @@
   "version": "2.0.6",
   "main": "grunt.js",
   "dependencies": {
+    "cp-file": "^2.2.0",
     "fs-plus": "^2.3.2",
     "grunt": "0.4",
-    "rx": "^2.3.20",
     "npm": "~1.4.5",
+    "rx": "^2.3.20",
     "underscore": "^1.7.0"
   },
   "licenses": [
