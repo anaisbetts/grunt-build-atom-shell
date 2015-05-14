@@ -44,7 +44,14 @@ module.exports = (grunt) ->
       rx.Disposable.empty
       
   stripAllBinaries = (dirToStrip) ->
-    return rx.Observable.return(true) if process.platform is 'win32'
+    if process.platform is 'win32'
+      return rx.Observable.create (subj) ->
+        symFiles = /\.(pdb|ilk|exp)$/i
+        toDelete = _.filter glob.sync(path.join(dirToStrip, '**')), (x) -> x.match(symFiles)
+
+        grunt.verbose.ok "Stripping symbols: #{toDelete.join(',')}"
+        _.each toDelete, (x) -> rm(x)
+        return rx.Observable.return(true).subscribe(subj)
     
     binaryFiles = /\.(so|dylib|node)$/i
 
