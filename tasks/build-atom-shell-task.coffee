@@ -53,7 +53,9 @@ module.exports = (grunt) ->
       
       binaries = _.filter(glob.sync(path.join(dirToStrip, '**')), (x) ->
         return true if x.match(binaryFiles)
-        stat = fs.statSync(x)
+        stat = fs.lstatSync(x)
+
+        return false if stat.isSymbolicLink()
         
         # Check if executable bit is set
         return stat and stat.isFile() and (stat.mode & 0o111) > 0
