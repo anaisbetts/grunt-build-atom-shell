@@ -66,7 +66,11 @@ module.exports = (grunt) ->
         return rx.Observable.return(true).subscribe(subj)
       
       grunt.verbose.ok "Stripping binaries: #{binaries.join(',')}"
-      return spawnObservable({cmd: 'strip', args: binaries, opts: {cwd: dirToStrip }}).subscribe(subj)
+
+      return rx.Observable.fromArray(binaries)
+        .flatMap((x) -> spawnObservable({cmd: 'strip', args: [x], opts: {cwd: dirToStrip }}).catch(rx.Observable.return(true)))
+        .takeLast(1)
+        .subscribe(subj)
     )
 
   bootstrapAtomShell = (buildDir, atomShellDir, remoteUrl, tag, stdout, stderr) ->
