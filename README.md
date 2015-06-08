@@ -41,7 +41,7 @@ module.exports = function(grunt) {
     'build-atom-shell': {
       tag: 'v0.19.5',
       nodeVersion: '0.18.0',
-      buildDir: (path.env.TMPDIR || path.env.TEMP || '/tmp') + '/atom-shell',
+      buildDir: (process.env.TMPDIR || process.env.TEMP || '/tmp') + '/atom-shell',
       projectName: 'mycoolapp',
       productName: 'MyCoolApp'
     }
