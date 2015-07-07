@@ -114,7 +114,7 @@ module.exports = (grunt) ->
 
     bootstrapCmd =
       cmd: 'python'
-      args: ['script/bootstrap.py', '-v', '-y']
+      args: ['script/bootstrap.py', '-v']
       opts: cmdOptions
       stdout: stdout
       stderr: stderr
